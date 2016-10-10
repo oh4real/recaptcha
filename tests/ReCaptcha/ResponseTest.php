@@ -42,9 +42,9 @@ class ResponseTest extends \PHPUnit_Framework_TestCase
     public function provideJson()
     {
         return array(
-            array('{"success": true}', true, array()),
+            array('{"success": true, "challenge_ts":"12345", "hostname":"www.domain.com"}', true, array()),
             array('{"success": false, "error-codes": ["test"]}', false, array('test')),
-            array('{"success": true, "error-codes": ["test"]}', true, array()),
+            array('{"success": true, "challenge_ts":"12345", "hostname":"www.domain.com"}', true, array()),
             array('{"success": false}', false, array()),
             array('BAD JSON', false, array('invalid-json')),
         );
@@ -52,17 +52,19 @@ class ResponseTest extends \PHPUnit_Framework_TestCase
 
     public function testIsSuccess()
     {
-        $response = new Response(true);
+        $response = (new Response())->setSuccess(true);
         $this->assertTrue($response->isSuccess());
 
-        $response = new Response(false);
+        $response = (new Response())->setSuccess(false);
         $this->assertFalse($response->isSuccess());
     }
 
     public function testGetErrorCodes()
     {
         $errorCodes = array('test');
-        $response = new Response(true, $errorCodes);
+        $response = (new Response())
+            ->setSuccess(true)
+            ->setErrorCodes($errorCodes);
         $this->assertEquals($errorCodes, $response->getErrorCodes());
     }
 }

@@ -28,6 +28,8 @@ namespace ReCaptcha;
 
 class ReCaptchaTest extends \PHPUnit_Framework_TestCase
 {
+    const TEST_SECRET_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe';
+    const TEST_G_RESPONSE = '03AHJ_VustjIfiLhx5siwc0V43Et0bm2G7YOjZPYQv-VZnav20gLtrVNhMRkql9HoWaGtRTPKqHIfuRTf1BhWdQVoiSdwYVQCOXFg6Db96xzh9U2rRGSBSKs9hPXPAW_5YxTbFlN2tNJ5fJySSqNhOhNY9qjpZdcc7rdCP53zYbumW5Asaq9Oke2o1MP7LeVrOAtjZxdSjLF8oXIK0QlPGoKX1e6vU-oAfbuyql0n_NEa7AeDa8GbRXA8reNAhzbcV2_Q_Lw52tXyX7BTr3XIJTv0BbhXbc3PcL4Sc6b0hvXWkOU7J0c3bxzLPXgdi9jVt9E6ML_XKsg-s9oHdMhTU2eOhMnhKZwXi2Tuc44FTX_gcr_YR1m3brpO8vv4183EhnI_1pHhFKEO_CkRNMf4A1OW3zhCDBE7VFN1KvMfdcojg5LsvS01GxbsTzQ4cASmjQJ1YM6TA-Eeh6mwg1qZ5TZBG1OUsx2Sci1yih9OGSewI9keOsQcf3-PNWrRYhGAnX8IM69DyMXcRXPsdd-j8SkNcpdjPhAiph_lZZZCRUR_N1oRWbzg8YARqsIwcFxEwGne1mzxXfsc1WvOM0ehz96oHd72fgnIwQZ3CHpmLjY24610OItJNwbzOExqx9nL-CRNTPbcLDywQ20Zuy4Isw_Fmv22QPBckX-kFvItYTwxMbGpmNmox7uXzgujUqOp7yXHTZDnWkMQ1pUgH2s0HR3Zyxwq_uYpVlzMxFafuUBi1w3-mzKrZmQrNreNKpZjNuGVnit8c7WUpIT2PUEN2giXLWeG8sahrSbVLR5u3HeQ4ZxkJU6q4pzdcFJNgdh-Sz8C8osgkDUgMKCzuKmfqE_6voOWRCDmOmc-q1T8a42BXfCQBwUhLwf0QUpH6iIwmMSkH6a9PvPCTlQFB_iqxxTZxCuxjLS346A';
 
     /**
      * @expectedException \RuntimeException
@@ -57,7 +59,7 @@ class ReCaptchaTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(array('missing-input-response'), $response->getErrorCodes());
     }
 
-    public function testVerifyReturnsResponse()
+    public function testMockVerifyReturnsResponse()
     {
         $method = $this->getMock('\\ReCaptcha\\RequestMethod', array('submit'));
         $method->expects($this->once())
@@ -66,10 +68,32 @@ class ReCaptchaTest extends \PHPUnit_Framework_TestCase
 
                             return true;
                         }))
-                ->will($this->returnValue('{"success": true}'));
+                ->will($this->returnValue('{"success": true, "challenge_ts":12345, "hostname":"www.domain.com"}'));
         ;
         $rc = new ReCaptcha('secret', $method);
         $response = $rc->verify('response');
         $this->assertTrue($response->isSuccess());
+    }
+
+    /**
+     * @dataProvider integrationDataSet
+     */
+    public function testVerifyReturnsResponse($response, $success, $errorCodes = [])
+    {
+        $rc = new ReCaptcha(self::TEST_SECRET_KEY);
+        $response = $rc->verify($response);
+        $this->assertEquals($success, $response->isSuccess());
+        $this->assertEquals($errorCodes, $response->getErrorCodes());
+        if ($response->isSuccess()) {
+            $this->assertEquals('localhost', $response->getHostName());
+        }
+    }
+    
+    public function integrationDataSet() {
+        return [
+            ['', false, ['missing-input-response']], 
+            [uniqid(), false, ['invalid-input-response']],
+            [self::TEST_G_RESPONSE, true]
+        ];
     }
 }

@@ -87,12 +87,14 @@ class ReCaptcha
     {
         // Discard empty solution submissions
         if (empty($response)) {
-            $recaptchaResponse = new Response(false, array('missing-input-response'));
-            return $recaptchaResponse;
+            return (new Response())
+                ->setSuccess(false)
+                ->setErrorCodes(['missing-input-response']);
         }
 
         $params = new RequestParameters($this->secret, $response, $remoteIp, self::VERSION);
         $rawResponse = $this->requestMethod->submit($params);
+        
         return Response::fromJson($rawResponse);
     }
 }

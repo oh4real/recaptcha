@@ -38,10 +38,22 @@ class Response
     private $success = false;
 
     /**
-     * Error code strings.
+     * Optional: Error code strings.
      * @var array
      */
     private $errorCodes = array();
+
+    /**
+     * timestamp of the challenge load (ISO format yyyy-MM-dd'T'HH:mm:ssZZ)
+     * @var string
+     */
+    private $challengeTs;
+
+    /**
+     * the hostname of the site where the reCAPTCHA was solved
+     * @var string
+     */
+    private $hostName;
 
     /**
      * Build the response from the expected JSON returned by the service.
@@ -54,30 +66,21 @@ class Response
         $responseData = json_decode($json, true);
 
         if (!$responseData) {
-            return new Response(false, array('invalid-json'));
+            return (new Response())
+                ->setErrorCodes(['invalid-json']);
         }
 
-        if (isset($responseData['success']) && $responseData['success'] == true) {
-            return new Response(true);
+        $response = (new Response())
+            ->setSuccess($responseData['success'])
+            ->setErrorCodes(isset($responseData['error-codes']) ? $responseData['error-codes'] : []);
+        
+        if ($response->isSuccess()) {
+            $response
+                ->setChallengeTs($responseData['challenge_ts'])
+                ->setHostName($responseData['hostname']);
         }
-
-        if (isset($responseData['error-codes']) && is_array($responseData['error-codes'])) {
-            return new Response(false, $responseData['error-codes']);
-        }
-
-        return new Response(false);
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param boolean $success
-     * @param array $errorCodes
-     */
-    public function __construct($success, array $errorCodes = array())
-    {
-        $this->success = $success;
-        $this->errorCodes = $errorCodes;
+        
+        return $response;
     }
 
     /**
@@ -98,5 +101,57 @@ class Response
     public function getErrorCodes()
     {
         return $this->errorCodes;
+    }
+
+    /**
+     * @return string
+     */
+    public function getChallengeTs()
+    {
+        return $this->challengeTs;
+    }
+
+    /**
+     * @param string $challengeTs
+     */
+    public function setChallengeTs($challengeTs)
+    {
+        $this->challengeTs = $challengeTs;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getHostName()
+    {
+        return $this->hostName;
+    }
+
+    /**
+     * @param string $hostName
+     */
+    public function setHostName($hostName)
+    {
+        $this->hostName = $hostName;
+        return $this;
+    }
+
+    /**
+     * @param boolean $success
+     */
+    public function setSuccess($success)
+    {
+        $this->success = $success;
+        return $this;
+    }
+
+    /**
+     * @param array $errorCodes
+     */
+    public function setErrorCodes($errorCodes)
+    {
+        $this->errorCodes = $errorCodes;
+        return $this;
     }
 }
