@@ -91,8 +91,13 @@ EOT;
      */
     public function testVerifyReturnsResponse($response, $success, $errorCodes = [])
     {
+        // given
         $rc = new ReCaptcha(self::TEST_SECRET_KEY);
+
+        // when
         $response = $rc->verify($response);
+
+        // then
         $this->assertEquals($success, $response->isSuccess());
         $this->assertEquals($errorCodes, $response->getErrorCodes());
         if ($response->isSuccess()) {
