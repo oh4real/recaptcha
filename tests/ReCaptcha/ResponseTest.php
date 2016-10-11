@@ -42,9 +42,9 @@ class ResponseTest extends \PHPUnit_Framework_TestCase
     public function provideJson()
     {
         return array(
-            array('{"success": true, "challenge_ts":"12345", "hostname":"www.domain.com"}', true, array()),
+            array('{"success": true, "challenge_ts":"2016-10-10T18:42:48Z", "hostname":"www.domain.com"}', true, array()),
             array('{"success": false, "error-codes": ["test"]}', false, array('test')),
-            array('{"success": true, "challenge_ts":"12345", "hostname":"www.domain.com"}', true, array()),
+            array('{"success": true, "challenge_ts":"2016-10-10T18:42:48Z", "hostname":"www.domain.com"}', true, array()),
             array('{"success": false}', false, array()),
             array('BAD JSON', false, array('invalid-json')),
         );
